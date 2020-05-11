@@ -10,8 +10,9 @@ public class AlarmTrigger : MonoBehaviour
     [SerializeField] private AudioClip _alarmSound;
     [SerializeField] private AudioSource _audioSource;
     [SerializeField] private float _maxTime = 3f;
-    [SerializeField] private bool isWorkAlarm = false;
+    [SerializeField] private bool _isWorkAlarm = false;
     [SerializeField] private float _currentTime = 0f;
+    [SerializeField] private float _duration = 0f;
 
 
     private void Start()
@@ -37,57 +38,52 @@ public class AlarmTrigger : MonoBehaviour
         }
     }
 
-    private void AlarmPlaySound(bool isAlarm, float partTime)
+    private void AlarmVolumeChanger(float partTime)
     {
-        _audioSource.volume += !isAlarm ? partTime : -partTime;
+        _currentTime += partTime;
+        _duration = _currentTime / _maxTime;
+        _audioSource.volume = _duration;
     }
 
-    public void AP()
-    {
-        _audioSource.PlayOneShot(_alarmSound);
-    }
+    // Чужой в доме - запуск аларм
+    // Чужой был дома, но вышел - отключение сигнализации
+    // Чужой вне дома - аларм отключена
 
     private void Update()
     {
-        float duration = 0f;
         if (_isPenetrate)
         {
-            if (!isWorkAlarm)
+            if (!_isWorkAlarm)
             {
-                if (_currentTime >= _maxTime)
-                {
-                    _currentTime = _maxTime;
-                    isWorkAlarm = true;
-                }
-                else
-                {
-                    _currentTime += Time.deltaTime;
-                    duration = _currentTime / _maxTime;
-                    AlarmPlaySound(isWorkAlarm, duration);
-                }
-            }
-            _audioSource.Play();
-        }
-        else
-        {
-            if (isWorkAlarm)
-            {
-                if (_currentTime > 0f)
-                {
-                    _currentTime -= Time.deltaTime;
-                    duration = _currentTime / _maxTime;
-                    AlarmPlaySound(isWorkAlarm, duration);
-                }
-                else
-                {
-                    _currentTime = 0f;
-                    isWorkAlarm = false;
-                }
+                _isWorkAlarm = true;
                 _audioSource.Play();
             }
             else
             {
-                _audioSource.Stop();
+                if (_currentTime >= _maxTime)
+                {
+                    _currentTime = _maxTime;
+                }
+                else
+                {
+                    AlarmVolumeChanger(Time.deltaTime);
+                }
+            }
+        }
+        else
+        {
+            if (_isWorkAlarm)
+            {
+                if (_currentTime <= 0f)
+                {
+                    _currentTime = 0f;
+                    _isWorkAlarm = false;
+                    _audioSource.Stop();
+                }
+                else
+                {
+                    AlarmVolumeChanger(-Time.deltaTime);
+                }
             }
         }
     }
