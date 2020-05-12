@@ -13,7 +13,7 @@ public class AlarmTrigger : MonoBehaviour
     [SerializeField] private bool _isWorkAlarm = false;
     [SerializeField] private float _currentTime = 0f;
     [SerializeField] private float _duration = 0f;
-    [SerializeField] private Coroutine runCoroutine;
+    private Coroutine runCoroutine;
 
 
     private void Start()

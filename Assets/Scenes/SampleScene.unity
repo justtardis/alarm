@@ -845,7 +845,7 @@ MonoBehaviour:
   _isPenetrate: 0
   _alarmSound: {fileID: 8300000, guid: 25ed8fe83aa552043a72c57085ef5cc9, type: 3}
   _audioSource: {fileID: 519420029}
-  _maxTime: 3
+  _maxTime: 10
   _isWorkAlarm: 0
   _currentTime: 0
   _duration: 0
