@@ -13,7 +13,7 @@ public class AlarmTrigger : MonoBehaviour
     [SerializeField] private bool _isWorkAlarm = false;
     [SerializeField] private float _currentTime = 0f;
     [SerializeField] private float _duration = 0f;
-    private Coroutine runCoroutine;
+    [SerializeField] private Coroutine runCoroutine;
 
 
     private void Start()
@@ -25,7 +25,7 @@ public class AlarmTrigger : MonoBehaviour
     {
         if (collision.TryGetComponent(out Thief thief))
         {
-            StartCoroutine(ArmedAlarm());
+            OnCorutineStarter(Armed());
             _displayUI.SetNewText(_isPenetrate = true);
         }
     }
@@ -34,19 +34,28 @@ public class AlarmTrigger : MonoBehaviour
     {
         if (collision.TryGetComponent(out Thief thief))
         {
-            StartCoroutine(DisarmedAlarm());
+            OnCorutineStarter(Disarmed());
             _displayUI.SetNewText(_isPenetrate = false);
         }
     }
 
-    private void AlarmVolumeChanger(float partTime)
+    private void OnCorutineStarter(IEnumerator startCorutine)
+    {
+        if (runCoroutine != null)
+        {
+            StopCoroutine(runCoroutine);
+        }
+        runCoroutine = StartCoroutine(startCorutine);
+    }
+
+    private void ChangeVolume(float partTime)
     {
         _currentTime += partTime;
         _duration = _currentTime / _maxTime;
         _audioSource.volume = _duration;
     }
 
-    private IEnumerator ArmedAlarm()
+    private IEnumerator Armed()
     {
         bool isFinishStart = false;
         _audioSource.Play();
@@ -56,31 +65,29 @@ public class AlarmTrigger : MonoBehaviour
             {
                 _currentTime = _maxTime;
                 isFinishStart = true;
-                StopCoroutine(ArmedAlarm());
             }
             else
             {
-                AlarmVolumeChanger(Time.deltaTime);
+                ChangeVolume(Time.deltaTime);
             }
             yield return null;
         }
     }
 
-    private IEnumerator DisarmedAlarm()
+    private IEnumerator Disarmed()
     {
-        bool isFinishStart = true;
-        while (isFinishStart)
+        bool isFinishStop = true;
+        while (isFinishStop)
         {
             if (_currentTime > 0f)
             {
-                AlarmVolumeChanger(-Time.deltaTime);
+                ChangeVolume(-Time.deltaTime);
             }
             else
             {
                 _currentTime = 0f;
                 _audioSource.Stop();
-                StopCoroutine(DisarmedAlarm());
-                isFinishStart = false;
+                isFinishStop = false;
             }
             yield return null;
         }
