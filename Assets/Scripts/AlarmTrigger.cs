@@ -13,6 +13,7 @@ public class AlarmTrigger : MonoBehaviour
     [SerializeField] private bool _isWorkAlarm = false;
     [SerializeField] private float _currentTime = 0f;
     [SerializeField] private float _duration = 0f;
+    private Coroutine runCoroutine;
 
 
     private void Start()
@@ -24,8 +25,8 @@ public class AlarmTrigger : MonoBehaviour
     {
         if (collision.TryGetComponent(out Thief thief))
         {
-            _isPenetrate = true;
-            _displayUI.SetNewText(_isPenetrate);
+            StartCoroutine(ArmedAlarm());
+            _displayUI.SetNewText(_isPenetrate = true);
         }
     }
 
@@ -33,8 +34,8 @@ public class AlarmTrigger : MonoBehaviour
     {
         if (collision.TryGetComponent(out Thief thief))
         {
-            _isPenetrate = false;
-            _displayUI.SetNewText(_isPenetrate);
+            StartCoroutine(DisarmedAlarm());
+            _displayUI.SetNewText(_isPenetrate = false);
         }
     }
 
@@ -45,46 +46,43 @@ public class AlarmTrigger : MonoBehaviour
         _audioSource.volume = _duration;
     }
 
-    // Чужой в доме - запуск аларм
-    // Чужой был дома, но вышел - отключение сигнализации
-    // Чужой вне дома - аларм отключена
-
-    private void Update()
+    private IEnumerator ArmedAlarm()
     {
-        if (_isPenetrate)
+        bool isFinishStart = false;
+        _audioSource.Play();
+        while (!isFinishStart)
         {
-            if (!_isWorkAlarm)
+            if (_currentTime >= _maxTime)
             {
-                _isWorkAlarm = true;
-                _audioSource.Play();
+                _currentTime = _maxTime;
+                isFinishStart = true;
+                StopCoroutine(ArmedAlarm());
             }
             else
             {
-                if (_currentTime >= _maxTime)
-                {
-                    _currentTime = _maxTime;
-                }
-                else
-                {
-                    AlarmVolumeChanger(Time.deltaTime);
-                }
+                AlarmVolumeChanger(Time.deltaTime);
             }
+            yield return null;
         }
-        else
+    }
+
+    private IEnumerator DisarmedAlarm()
+    {
+        bool isFinishStart = true;
+        while (isFinishStart)
         {
-            if (_isWorkAlarm)
+            if (_currentTime > 0f)
             {
-                if (_currentTime <= 0f)
-                {
-                    _currentTime = 0f;
-                    _isWorkAlarm = false;
-                    _audioSource.Stop();
-                }
-                else
-                {
-                    AlarmVolumeChanger(-Time.deltaTime);
-                }
+                AlarmVolumeChanger(-Time.deltaTime);
             }
+            else
+            {
+                _currentTime = 0f;
+                _audioSource.Stop();
+                StopCoroutine(DisarmedAlarm());
+                isFinishStart = false;
+            }
+            yield return null;
         }
     }
 }
